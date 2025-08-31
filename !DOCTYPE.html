@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>Happy 10th, Thevi — Premium Red Futuristic Roast</title>
+  <style>
+    :root{
+      --red-1:#ff2848;
+      --red-2:#b10026;
+      --red-3:#3a0010;
+      --red-neon:#ff3b4e;
+      --gold:#ffd35a;
+      --white:#ffffff;
+      --glass:rgba(255,255,255,0.08);
+      --glass-strong:rgba(255,255,255,0.14);
+    }
+
+    /* Global Reset */
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:
+        radial-gradient(1200px 800px at 50% 50%, var(--red-1) 0%, var(--red-2) 40%, var(--red-3) 100%);
+      color:var(--white);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      /* Allow content to be scrollable */
+      overflow:auto;
+    }
+
+    /* Scene Layers - Positioned fixed to the viewport for the background effect */
+    canvas.bg, canvas.fx{
+      position:fixed; inset:0; width:100%; height:100%;
+      display:block; z-index:0; pointer-events:none;
+    }
+
+    .grid{
+      position:fixed; inset:0; z-index:1; pointer-events:none;
+      background:
+        radial-gradient(ellipse at center, rgba(255,59,78,0.25) 0%, rgba(0,0,0,0) 70%),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 80px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0 2px, transparent 2px 80px);
+      mask-image: radial-gradient(circle at center, black 60%, transparent 100%);
+      animation: gridPulse 6s ease-in-out infinite;
+    }
+    @keyframes gridPulse{
+      0%,100%{filter:drop-shadow(0 0 0 var(--red-neon))}
+      50%{filter:drop-shadow(0 0 24px var(--red-neon))}
+    }
+
+    /* Center Stage - Now a scrollable container */
+    .stage{
+      position:relative; /* Allows content to flow with the page */
+      min-height:100vh; /* Ensures it takes up at least one full screen height */
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-start; /* Align content to the top */
+      z-index:2;
+      padding:16px;
+    }
+    .stack{display:flex; flex-direction:column; align-items:center; gap:14px; max-width:940px; width:min(94vw,980px);}
+
+    /* Title */
+    .title{
+      font-weight:800; letter-spacing:0.5px; text-align:center;
+      font-size:clamp(28px, 5vw, 54px);
+      line-height:1.12;
+      text-shadow:
+        0 0 10px rgba(255,255,255,0.4),
+        0 0 30px var(--red-neon),
+        0 0 60px rgba(255,59,78,0.5);
+      filter: brightness(1.05);
+    }
+    .subtitle{
+      font-size:clamp(14px, 2.2vw, 18px);
+      opacity:0.9;
+    }
+
+    /* Hero Card */
+    .card3d{
+      perspective:1000px;
+      width:min(94vw, 900px);
+    }
+    .panel{
+      position:relative;
+      background:linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+      border:1px solid rgba(255,255,255,0.14);
+      border-radius:24px;
+      padding:22px 18px;
+      box-shadow:
+        0 10px 50px rgba(0,0,0,0.4),
+        0 0 60px rgba(255,59,78,0.25) inset;
+      transform-style:preserve-3d;
+      transition: transform 300ms ease, box-shadow 300ms ease;
+      cursor: pointer;
+    }
+    .panel:hover{
+      box-shadow:
+        0 20px 90px rgba(0,0,0,0.55),
+        0 0 95px rgba(255,59,78,0.32) inset;
+    }
+
+    /* Mascot (original electric buddy, layered for depth) */
+    .mascot-wrap{
+      position:relative; width:min(70vw, 440px); height: min(70vw, 440px); margin:auto;
+      transform-style:preserve-3d;
+    }
+    .layer{
+      position:absolute; inset:0; display:grid; place-items:center;
+      transform-style:preserve-3d;
+    }
+    .floaty{animation: floaty 5s ease-in-out infinite}
+    @keyframes floaty{
+      0%,100%{ transform: translateZ(0px) translateY(0px) }
+      50%{ transform: translateZ(18px) translateY(-6px) }
+    }
+
+    /* Call to action */
+    .cta{
+      margin-top:8px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center;
+    }
+    .cta-text{
+      font-weight:700; letter-spacing:0.2px;
+      padding:14px 22px; border-radius:14px;
+      color:#1a0000; background:linear-gradient(180deg,#ffffff,#e9e9e9);
+      box-shadow:
+        0 12px 40px rgba(255,255,255,0.18),
+        0 0 30px rgba(255,59,78,0.45);
+      transition: transform 120ms ease, box-shadow 200ms ease, filter 200ms ease, opacity 260ms ease;
+    }
+    .cta-text.hidden{
+      opacity:0;
+      pointer-events:none;
+    }
+
+    /* Hidden Roast Card */
+    .roast{
+      margin-top:14px;
+      display:none;
+      background:linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+      border:1px solid rgba(255,255,255,0.18);
+      border-radius:18px;
+      padding:18px;
+      font-size:clamp(14px, 2.6vw, 20px);
+      line-height:1.6;
+      box-shadow: inset 0 0 80px rgba(255,59,78,0.25);
+    }
+    .glowline{
+      color:#fff;
+      text-shadow:
+        0 0 10px var(--red-neon),
+        0 0 28px rgba(255,59,78,0.8);
+    }
+    .sign{ display:block; margin-top:10px; font-weight:800 }
+
+    /* Footer Hint */
+    .hint{
+      margin-top:6px; font-size:12px; opacity:0.7; text-align:center;
+    }
+
+    /* Accessibility reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      .floaty, .grid{ animation:none }
+      .panel, .layer{ transition:none }
+    }
+  </style>
+</head>
+<body>
+  <!-- Animated particle background -->
+  <canvas class="bg" id="bg"></canvas>
+
+  <!-- Lightning/FX overlay -->
+  <canvas class="fx" id="fx"></canvas>
+
+  <!-- Neon grid mask -->
+  <div class="grid" aria-hidden="true"></div>
+
+  <!-- Main stage -->
+  <div class="stage" role="main">
+    <div class="stack">
+      <div class="title">🎉 Happy Birthday <span class="glowline">Thevi</span>! 🎉</div>
+      <div class="subtitle">Premium red, playful-futuristic — tap to unlock the roast.</div>
+
+      <div class="card3d">
+        <div class="panel" id="panel">
+          <!-- 3D Mascot (original electric buddy) -->
+          <div class="mascot-wrap" id="mascot" aria-label="Electric buddy mascot">
+            <!-- Shadow Base -->
+            <div class="layer" data-depth="-12" aria-hidden="true">
+              <svg width="100%" height="100%" viewBox="0 0 600 600">
+                <ellipse cx="300" cy="428" rx="170" ry="38" fill="rgba(0,0,0,0.35)"></ellipse>
+              </svg>
+            </div>
+
+            <!-- Aura -->
+            <div class="layer floaty" data-depth="-6" aria-hidden="true">
+              <svg width="100%" height="100%" viewBox="0 0 600 600">
+                <defs>
+                  <radialGradient id="aura" cx="50%" cy="45%">
+                    <stop offset="0%" stop-color="rgba(255,211,90,0.65)"/>
+                    <stop offset="65%" stop-color="rgba(255,59,78,0.22)"/>
+                    <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+                  </radialGradient>
+                </defs>
+                <circle cx="300" cy="270" r="190" fill="url(#aura)"></circle>
+              </svg>
+            </div>
+
+            <!-- Buddy Body -->
+            <div class="layer" data-depth="0">
+              <svg width="100%" height="100%" viewBox="0 0 600 600">
+                <!-- Tail lightning -->
+                <path d="M395 290 L460 235 L425 315 L490 285 L420 352"
+                      fill="none" stroke="rgba(255,211,90,0.9)" stroke-width="12"
+                      stroke-linecap="round" stroke-linejoin="round"
+                      filter="url(#tailglow)"/>
+                <defs>
+                  <filter id="tailglow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="4" result="b"/>
+                    <feMerge>
+                      <feMergeNode in="b"/><feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+
+                <!-- Body -->
+                <g>
+                  <ellipse cx="300" cy="300" rx="130" ry="140" fill="url(#goldGrad)" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
+                  <defs>
+                    <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#ffe58f"/>
+                      <stop offset="60%" stop-color="#ffd35a"/>
+                      <stop offset="100%" stop-color="#ffb800"/>
+                    </linearGradient>
+                  </defs>
+                </g>
+
+                <!-- Ears (pointy, stylized) -->
+                <path d="M240 160 L215 80 L275 150 Z" fill="#ffd35a" stroke="#00000033" stroke-width="2"></path>
+                <path d="M360 160 L385 80 L325 150 Z" fill="#ffd35a" stroke="#00000033" stroke-width="2"></path>
+
+                <!-- Cheeks -->
+                <circle cx="240" cy="320" r="18" fill="url(#cheekR)"/>
+                <circle cx="360" cy="320" r="18" fill="url(#cheekR)"/>
+                <defs>
+                  <radialGradient id="cheekR">
+                    <stop offset="0%" stop-color="#ff6a6a"/>
+                    <stop offset="100%" stop-color="#ff3b4e"/>
+                  </radialGradient>
+                </defs>
+
+                <!-- Eyes -->
+                <circle cx="265" cy="285" r="12" fill="#1a1a1a"/>
+                <circle cx="335" cy="285" r="12" fill="#1a1a1a"/>
+                <circle cx="260" cy="280" r="4" fill="#ffffffa0"/>
+                <circle cx="330" cy="280" r="4" fill="#ffffffa0"/>
+
+                <!-- Mouth -->
+                <path d="M280 328 Q300 342 320 328" stroke="#1a1a1a" stroke-width="5" fill="none" stroke-linecap="round"/>
+
+                <!-- Bike silhouette cameo -->
+                <g transform="translate(180,390) scale(0.8)" opacity="0.9">
+                  <circle cx="60" cy="40" r="28" stroke="#fff8" stroke-width="4" fill="none"/>
+                  <circle cx="190" cy="40" r="28" stroke="#fff8" stroke-width="4" fill="none"/>
+                  <path d="M60 40 L105 10 L130 40 L160 40" stroke="#fff8" stroke-width="4" fill="none"/>
+                  <path d="M105 10 L150 0" stroke="#fff8" stroke-width="4"/>
+                  <circle cx="105" cy="10" r="5" fill="#fff8"/>
+                </g>
+              </svg>
+            </div>
+
+            <!-- Spark ring -->
+            <div class="layer" data-depth="10" aria-hidden="true">
+              <svg width="100%" height="100%" viewBox="0 0 600 600">
+                <circle cx="300" cy="270" r="200" fill="none" stroke="rgba(255,59,78,0.18)" stroke-width="6"/>
+                <circle cx="300" cy="270" r="212" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="cta">
+            <div class="cta-text" id="revealText" aria-label="Click to Reveal the Roast">Click to Reveal the Roast</div>
+          </div>
+
+          <div class="roast" id="roast">
+            <div id="lines">
+              <!-- Lines type in here -->
+            </div>
+            <span class="sign glowline">— Your biggest hater, Sevindu 😎</span>
+          </div>
+
+          <div class="hint">Tip: Move your mouse or tilt your phone — the mascot has depth.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  console.log('🎂 Birthday roast script loaded');
+
+  /* ====== Utilities ====== */
+  const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+  const lerp=(a,b,t)=>a+(b-a)*t;
+  const q=(sel,root=document)=>root.querySelector(sel);
+  const qa=(sel,root=document)=>Array.from(root.querySelectorAll(sel));
+
+  /* ====== Background Particles ====== */
+  (function particles(){
+    const c=q('#bg'), ctx=c.getContext('2d');
+    let W,H, P=[];
+    function resize(){
+      W=c.width=innerWidth; H=c.height=innerHeight;
+      P = new Array(Math.floor((W*H)/18000)).fill(0).map(()=>{
+        return { x:Math.random()*W, y:Math.random()*H, r:Math.random()*2+0.7, a:Math.random()*Math.PI*2, s:Math.random()*0.4+0.2 };
+      });
+    }
+    addEventListener('resize',resize,{passive:true});
+    resize();
+    function tick(){
+      ctx.clearRect(0,0,W,H);
+      P.forEach(p=>{
+        p.a+=p.s*0.01; p.x+=Math.cos(p.a)*p.s; p.y+=Math.sin(p.a)*p.s;
+        if(p.x<-10) p.x=W+10; if(p.x>W+10) p.x=-10;
+        if(p.y<-10) p.y=H+10; if(p.y>H+10) p.y=-10;
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle='rgba(255,255,255,0.35)';
+        ctx.shadowColor='rgba(255,59,78,0.45)';
+        ctx.shadowBlur=6; ctx.fill();
+      });
+      requestAnimationFrame(tick);
+    }
+    tick();
+  })();
+
+  /* ====== Lightning / Confetti FX ====== */
+  const FX=(function(){
+    const c=q('#fx'), ctx=c.getContext('2d');
+    let W,H;
+    function resize(){ W=c.width=innerWidth; H=c.height=innerHeight; }
+    addEventListener('resize',resize,{passive:true});
+    resize();
+
+    function bolt(x1,y1,x2,y2, seg=18, sway=60, jag=0.6){
+      ctx.strokeStyle='rgba(255,255,255,0.95)'; ctx.lineWidth=2.5;
+      ctx.shadowBlur=18; ctx.shadowColor='rgba(255,211,90,0.9)';
+      ctx.beginPath(); ctx.moveTo(x1,y1);
+      for(let i=1;i<seg;i++){
+        const t=i/seg;
+        const nx=lerp(x1,x2,t)+(Math.random()-0.5)*sway*jag;
+        const ny=lerp(y1,y2,t)+(Math.random()-0.5)*sway*jag;
+        ctx.lineTo(nx,ny);
+      }
+      ctx.lineTo(x2,y2); ctx.stroke();
+      // glow
+      ctx.lineWidth=6; ctx.strokeStyle='rgba(255,211,90,0.25)'; ctx.stroke();
+    }
+
+    function flash(){
+      c.style.background='rgba(255,255,255,0.8)';
+      setTimeout(()=>c.style.background='transparent',60);
+    }
+
+    function confetti(n=180){
+      const bits=[];
+      for(let i=0;i<n;i++){
+        bits.push({
+          x:Math.random()*W, y:-20-Math.random()*H*0.2,
+          vx:(Math.random()-0.5)*2, vy:Math.random()*2+1.5,
+          c:`hsl(${Math.random()*40+350} 90% ${Math.random()*40+50}%)`,
+          s:Math.random()*4+2, r:Math.random()*Math.PI
+        });
+      }
+      const start=performance.now();
+      function step(now){
+        ctx.clearRect(0,0,W,H);
+        bits.forEach(b=>{
+          b.x+=b.vx; b.y+=b.vy; b.vy+=0.02; b.r+=0.1;
+          ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(b.r);
+          ctx.fillStyle=b.c; ctx.fillRect(-b.s*0.5,-b.s*0.5,b.s,b.s);
+          ctx.restore();
+        });
+        if(now-start<2500) requestAnimationFrame(step);
+        else ctx.clearRect(0,0,W,H);
+      }
+      requestAnimationFrame(step);
+    }
+
+    function zapCenter(){
+      const cx=W/2, cy=H/3;
+      for(let i=0;i<3;i++){
+        const ex=cx+(Math.random()-0.5)*W*0.5;
+        const ey=cy+Math.random()*H*0.6;
+        bolt(cx,cy,ex,ey);
+      }
+      flash(); confetti();
+    }
+
+    return { bolt, zapCenter, flash, confetti, clear:()=>ctx.clearRect(0,0,W,H) };
+  })();
+
+  /* ====== 3D Parallax ====== */
+  const Parallax=(function(){
+    const panel=q('#panel'), mascot=q('#mascot');
+    let rx=0, ry=0;
+    let isFrozen = false;
+    let animFrameId = null;
+
+    function move(e){
+      if(isFrozen) return;
+      const r=panel.getBoundingClientRect();
+      const px=(e.clientX||r.left+r.width/2)-(r.left+r.width/2);
+      const py=(e.clientY||r.top+r.height/2)-(r.top+r.height/2);
+      const dx=clamp(px/(r.width/2),-1,1);
+      const dy=clamp(py/(r.height/2),-1,1);
+      rx=dy*7; ry=-dx*10;
+    }
+
+    function raf(){
+      if(!isFrozen){
+        const crx=lerp(0,rx,0.9), cry=lerp(0,ry,0.9);
+        panel.style.transform=`rotateX(${crx}deg) rotateY(${cry}deg)`;
+        qa('.layer',mascot).forEach(l=>{
+          const d=parseFloat(l.dataset.depth)||0;
+          l.style.transform=`translateZ(${d}px) rotateX(${crx*0.5}deg) rotateY(${cry*0.5}deg)`;
+        });
+      }
+      animFrameId = requestAnimationFrame(raf);
+    }
+    
+    function initListeners(){
+      panel.addEventListener('mousemove',move);
+      panel.addEventListener('mouseleave',()=>{rx=0; ry=0;});
+      panel.addEventListener('touchmove',e=>{
+        const t0=e.touches[0]; if(!t0) return;
+        move({clientX:t0.clientX, clientY:t0.clientY});
+      },{passive:true});
+      raf();
+    }
+
+    return {
+      init: initListeners,
+      freeze: () => {
+        isFrozen = true;
+        // Explicitly lock the panel's current transform to stop any micro-movements
+        panel.style.transform = getComputedStyle(panel).transform;
+        panel.removeEventListener('mousemove', move); // Deactivate the movement listener
+        if (animFrameId) cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      },
+      unfreeze: () => {
+        isFrozen = false;
+        panel.style.transform = ''; // Clear the transform to allow parallax to resume
+        panel.addEventListener('mousemove', move); // Reactivate the movement listener
+        if (!animFrameId) {
+           animFrameId = requestAnimationFrame(raf);
+        }
+      }
+    };
+  })();
+  Parallax.init();
+
+  /* ====== Roast Typewriter ====== */
+  const LINES=[
+    "Happy 10th, Thevi!",
+    "You finally hit double digits — and somehow still manage to be the loudest Pokémon trainer in the house.",
+    "From sketching Pikachu to zooming around on that new bike like it’s a race,",
+    "you’re basically unstoppable (and mildly annoying).",
+    "Keep being wild, creative, and just barely tolerable."
+  ];
+  function typeLines(el, lines, onDone){
+    let li=0, ci=0;
+    function beep(){ try{ Audio.sfx('tick'); }catch{} }
+    function step(){
+      if(li>=lines.length){ onDone&&onDone(); return; }
+      if(ci===0){
+        const p=document.createElement('div');
+        p.className='glowline';
+        p.style.margin='6px 0';
+        p.style.textShadow='0 0 10px rgba(255,59,78,0.8), 0 0 24px rgba(255,59,78,0.5)';
+        el.appendChild(p);
+      }
+      const p=el.lastElementChild, line=lines[li];
+      p.textContent=line.slice(0,ci+1);
+      beep(); ci++;
+      const delay=22+Math.random()*30;
+      if(ci<line.length) setTimeout(step,delay);
+      else{ li++; ci=0; setTimeout(step,260); }
+    }
+    step();
+  }
+
+  /* ====== WebAudio (synth-only) ====== */
+  const Audio=(function(){
+    let actx, master, musicGain, sfxGain, started=false, loopId=null;
+    function init(){
+      if(started) return;
+      const C=window.AudioContext||window.webkitAudioContext;
+      if(!C) return;
+      actx=new C();
+      master=actx.createGain(); master.gain.value=0.9; master.connect(actx.destination);
+      musicGain=actx.createGain(); musicGain.gain.value=0.2; musicGain.connect(master);
+      sfxGain=actx.createGain(); sfxGain.gain.value=0.38; sfxGain.connect(master);
+      started=true;
+    }
+    function playNote(freq,time,dur,type='sine',gain=0.12){
+      const o=actx.createOscillator(), g=actx.createGain();
+      o.type=type; o.frequency.setValueAtTime(freq,time);
+      g.gain.setValueAtTime(0,time);
+      g.gain.linearRampToValueAtTime(gain,time+0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001,time+dur);
+      o.connect(g); g.connect(musicGain); o.start(time); o.stop(time+dur);
+    }
+    function startMusic(){
+      if(!started) return;
+      const tempo=120, beat=60/tempo, scale=[261.63,293.66,329.63,392.00,523.25];
+      let t=actx.currentTime+0.1;
+      function schedule(){
+        for(let i=0;i<8;i++){
+          const root=scale[i%4], third=scale[(i%4)+1]||scale[1];
+          playNote(root, t+i*beat*0.5,0.18,'triangle',0.10);
+          playNote(third*2, t+i*beat*0.5+0.1,0.14,'sine',0.06);
+        }
+        t+=beat*4;
+        loopId=setTimeout(schedule,beat*4000);
+      }
+      schedule();
+    }
+    function stopMusic(){ if(loopId) clearTimeout(loopId); }
+    function sfx(type){
+      if(!started) return;
+      if(type==='tick'){
+        const o=actx.createOscillator(), g=actx.createGain(), now=actx.currentTime;
+        o.type='square'; o.frequency.value=800+Math.random()*200;
+        g.gain.value=0.0001; o.connect(g); g.connect(sfxGain);
+        g.gain.exponentialRampToValueAtTime(0.25,now+0.005);
+        g.gain.exponentialRampToValueAtTime(0.0001,now+0.05);
+        o.start(now); o.stop(now+0.06);
+      } else if(type==='zap'){
+        const buffer=actx.createBuffer(1,actx.sampleRate*0.2,actx.sampleRate),
+              data=buffer.getChannelData(0);
+        for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/data.length,0.6);
+        const n=actx.createBufferSource(), bp=actx.createBiquadFilter(), g=actx.createGain(), o=actx.createOscillator(), og=actx.createGain(), now=actx.currentTime;
+        n.buffer=buffer; bp.type='bandpass'; bp.frequency.value=2000; bp.Q.value=4;
+        n.connect(bp); bp.connect(g); g.connect(sfxGain);
+        o.type='sawtooth'; o.frequency.value=1200; og.gain.value=0.25; o.connect(og); og.connect(sfxGain);
+        g.gain.value=0.5;
+        o.frequency.exponentialRampToValueAtTime(220, now+0.18);
+        og.gain.exponentialRampToValueAtTime(0.001, now+0.2);
+        g.gain.exponentialRampToValueAtTime(0.001, now+0.2);
+        n.start(now); o.start(now);
+        n.stop(now+0.22); o.stop(now+0.22);
+      }
+    }
+    function startAll(){
+      init();
+      if(!actx) return;
+      if(actx.state==='suspended') actx.resume();
+      startMusic();
+    }
+    return { init, startAll, stopMusic, sfx };
+  })();
+
+  /* ====== Reveal Flow ====== */
+  const revealText = q('#revealText');
+  const roast = q('#roast');
+  const lines = q('#lines');
+  const panel = q('#panel');
+
+  let revealed=false;
+  function reveal(){
+    if(revealed) return;
+    revealed=true;
+
+    Parallax.unfreeze();
+
+    Audio.init();
+    Audio.startAll();
+    FX.zapCenter();
+    Audio.sfx('zap');
+
+    panel.style.transition='transform 260ms cubic-bezier(.2,1.3,.3,1)';
+    panel.style.transform+=' scale(1.02)';
+    setTimeout(()=>{
+      panel.style.transform=panel.style.transform.replace(' scale(1.02)','');
+    },260);
+
+    // Fade the text out using a CSS class for a smooth transition
+    revealText.classList.add('hidden');
+
+    // Show the roast card and start typing after a short delay
+    setTimeout(()=>{
+      roast.style.display='block';
+      typeLines(lines, LINES, ()=>{});
+    }, 200);
+  }
+
+  // Event listener to trigger reveal on click anywhere on the panel
+  if (panel) {
+    panel.addEventListener('click', reveal);
+  } else {
+    console.error('Cannot bind reveal: panel not found');
+  }
+
+  /* ====== Accessibility: keyboard trigger ====== */
+  addEventListener('keydown', e=>{
+    if(e.key==='Enter' || e.key===' '){
+      if(panel) panel.click();
+    }
+  });
+</script>
+</body>
+</html>
